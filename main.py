@@ -2,23 +2,40 @@ import asyncio
 import json
 import logging
 import time
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi import (
     BackgroundTasks,
     FastAPI,
     HTTPException,
     WebSocket,
     WebSocketDisconnect,
+    UploadFile,
+    File
 )
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 import uuid
 import random
+import bcrypt
+import os
+import shutil
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Substitua com os domínios específicos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+UPLOAD_DIR = "files"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 BOT_USER_ID = "bot_user"
 
@@ -28,15 +45,26 @@ BOT_USER_ID = "bot_user"
 #     "participants": [user_ids],
 #     "messages": [ { "id", "user_id", "type", "content", "timestamp" }, ... ],
 #     "read_receipts": { user_id: last_read_msg_id },
-#     "presence": { user_id: {"status": "online"/"offline"/"typing", "last_seen": optional_datetime} }
+#     "presence": {
+#           user_id: {
+#               "status": "online"/"offline"/"typing",
+#               "last_seen": optional_datetime}
+#            }
 #   }
 # }
 chats = {}
 chat_connections = {}  # { chat_id: [WebSocket, WebSocket, ...] }
+users = {}
 
 
 class CreateChatRequest(BaseModel):
     participants: List[str]
+
+
+class User(BaseModel):
+    id: str
+    name: str
+    email: str
 
 
 class Message(BaseModel):
@@ -60,6 +88,17 @@ class PresenceUpdateRequest(BaseModel):
 
 class MarkReadRequest(BaseModel):
     user_id: str
+
+
+class CreateUserRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
 predefined_responses = [
@@ -258,6 +297,88 @@ predefined_responses = [
 ]
 
 
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    original_filename = file.filename
+    file_extension = os.path.splitext(original_filename)[-1]
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    unique_id = uuid.uuid4().hex[:8]
+    new_filename = f"{timestamp}_{unique_id}{file_extension}"
+
+    file_path = os.path.join(UPLOAD_DIR, new_filename)
+
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    return {"filename": new_filename, "url": f"/files/{new_filename}"}
+
+
+@app.get("/files/{filename}")
+async def get_file(filename: str):
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    return {"error": "File not found"}, 404
+
+
+@app.post("/users")
+def create_user(req: CreateUserRequest):
+    if any(user["email"] == req.email for user in users.values()):
+        raise HTTPException(status_code=400, detail="EMAIL_ALREADY_EXISTS")
+
+    user_id = str(uuid.uuid4())
+    hashed_password = bcrypt.hashpw(req.password.encode(
+        'utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    users[user_id] = {
+        "id": user_id,
+        "name": req.name,
+        "email": req.email,
+        "password": hashed_password
+    }
+    return {
+        "message": "USER_CREATED",
+        "user": {"user_id": user_id, "name": req.name, "email": req.email}
+    }
+
+
+@app.get("/users")
+def list_users():
+    print([
+        {key: value for key, value in user.items() if key != "password"}
+        for user in users.values()
+    ])
+    return {
+        "users": [
+            {key: value for key, value in user.items() if key != "password"}
+            for user in users.values()
+        ]
+    }
+
+
+@app.post("/login")
+def login(req: LoginRequest):
+
+    user = next((user for user in users.values()
+                if user["email"] == req.email), None)
+    if not user:
+        raise HTTPException(status_code=404, detail="INVALID_CREDENTIALS")
+
+    # Verify the password
+    if not bcrypt.checkpw(req.password.encode('utf-8'), user["password"].encode('utf-8')):
+        raise HTTPException(status_code=401, detail="INVALID_CREDENTIALS", )
+
+    return {
+        "message": "LOGIN_SUCCESSFUL",
+        "user": {
+            "user_id": user["id"],
+            "name": user["name"],
+            "email": user["email"]
+        }
+    }
+
+
 @app.post("/chats")
 def create_chat(req: CreateChatRequest):
     chat_id = str(uuid.uuid4())
@@ -362,7 +483,8 @@ async def update_presence(chat_id: str, req: PresenceUpdateRequest):
 
 
 async def _update_presence(chat_id, user_id, status):
-    logger.info(f"Updating presence for {user_id} in chat {chat_id} to {status}")
+    logger.info(
+        f"Updating presence for {user_id} in chat {chat_id} to {status}")
     presence = chats[chat_id]["presence"]
     if status == "offline":
         presence[user_id] = {

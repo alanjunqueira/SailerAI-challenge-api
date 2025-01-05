@@ -105,8 +105,6 @@ predefined_responses = [
     {"type": "text", "content": "Interesting..."},
     {"type": "text", "content": "Tell me more!"},
     {"type": "text", "content": "Got it!"},
-    {"type": "image", "content": "http://example.com/image.png"},
-    {"type": "audio", "content": "http://example.com/audio.mp3"},
     {"type": "text", "content": "Can you elaborate on that?"},
     {"type": "text", "content": "I see!"},
     {"type": "text", "content": "That makes sense."},

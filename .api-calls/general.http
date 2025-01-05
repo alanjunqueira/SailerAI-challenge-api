@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:8000
+# @token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2M2Q2OGNkNi0wMzQ0LTRmMDktODQyMy1jNDA3MDViNWU1YjMiLCJyb2xlIjoiT1dORVIiLCJzY2hvb2xJZCI6IjU5NmJlYmEzLWY1ZjAtNDQ0NS1hMWM4LTY2Mjk1ZDY1ZmI3ZiIsImlhdCI6MTcxODI5OTAwMywiZXhwIjoxNzE4Mzg1NDAzfQ.xvWoaYeauEBnFTb5YuafqejL2I1sgXL65MZALr7oe4g
+
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Alan Junqueira",
+  "email": "contato.alanjunqueira@gmail.com",
+  "password": "123456"
+}
+
+###
+# @name listUsers
+GET {{baseUrl}}/users
+
+###
+# @name loginUser
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "contato.alanjunqueira@gmail.com",
+  "password": "123456"
+}
+
+###
+# @name createChat
+POST {{baseUrl}}/chats
+Content-Type: application/json
+
+{
+  "participants": ["{{loginUser.response.body.user.user_id}}"]
+}
+
+###
+# @name listChats
+GET {{baseUrl}}/chats
+
+###
+# @name getChatMessages
+GET {{baseUrl}}/chats/{{createChat.response.body.chat_id}}/messages
+
+###
+# @name sendChatMessage
+POST {{baseUrl}}/chats/{{createChat.response.body.chat_id}}/messages
+Content-Type: application/json
+
+{
+  "content": "Quero saber xpto!",
+  "user_id": "{{loginUser.response.body.user.user_id}}",
+  "type": "text"
+}
+
+###
+# @name updateUserPresence
+POST {{baseUrl}}/chats/{{createChat.response.body.chat_id}}/presence
+Content-Type: application/json
+
+{
+  "user_id": "{{loginUser.response.body.user.user_id}}",
+  "status": "online"
+}
+
+###
+# @name markChatAsRead
+POST {{baseUrl}}/chats/{{createChat.response.body.chat_id}}/read
+Content-Type: application/json
+
+{
+  "user_id": "{{loginUser.response.body.user.user_id}}"
+}

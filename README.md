@@ -5,16 +5,20 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ## Expectations for the Interviewee
 
 ### What We Expect:
+
 1. **Frontend Implementation:**
+
    - Build a chat interface that can send and receive messages using the REST API and optionally integrate with WebSockets for real-time updates.
    - Design is highly important; we expect a visually appealing and user-friendly interface.
    - Animations are optional but very welcome.
 
 2. **Code Structure:**
+
    - Clean, modular, and well-documented code will be highly valued.
    - Use a modern framework (e.g., React, Next.js).
 
 3. **Features to Implement:**
+
    - **Core Features:**
      - Ability to create chats and display messages.
      - Sending text, images, and audio messages.
@@ -35,6 +39,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ---
 
 ## Features
+
 - Create chat rooms with participants.
 - Send messages (text, image, audio).
 - Real-time updates for user presence, read receipts, and new messages using WebSockets.
@@ -45,6 +50,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ## Installation and Setup
 
 ### Prerequisites
+
 1. Install [Docker](https://www.docker.com/) on your system.
 2. Clone this repository:
    ```bash
@@ -55,11 +61,13 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ### Build and Run with Docker
 
 1. Build the Docker image:
+
    ```bash
    docker build -t chat-backend .
    ```
 
 2. Run the Docker container:
+
    ```bash
    docker run -p 8000:8000 chat-backend
    ```
@@ -73,9 +81,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ### REST Endpoints
 
 #### 1. Create a Chat
+
 **Endpoint**: `POST /chats`
 
 **Request Body**:
+
 ```json
 {
   "participants": ["user1", "user2"]
@@ -83,6 +93,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 **Response**:
+
 ```json
 {
   "chat_id": "<generated_chat_id>",
@@ -91,9 +102,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 #### 2. List Chats
+
 **Endpoint**: `GET /chats`
 
 **Response**:
+
 ```json
 [
   {
@@ -104,9 +117,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 #### 3. Get Messages for a Chat
+
 **Endpoint**: `GET /chats/{chat_id}/messages`
 
 **Response**:
+
 ```json
 [
   {
@@ -120,9 +135,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 #### 4. Send a Message
+
 **Endpoint**: `POST /chats/{chat_id}/messages`
 
 **Request Body**:
+
 ```json
 {
   "user_id": "user1",
@@ -132,6 +149,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 **Response**:
+
 ```json
 {
   "status": "message_sent"
@@ -139,9 +157,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 #### 5. Update User Presence
+
 **Endpoint**: `POST /chats/{chat_id}/presence`
 
 **Request Body**:
+
 ```json
 {
   "user_id": "user1",
@@ -150,6 +170,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 **Response**:
+
 ```json
 {
   "chat_id": "<chat_id>",
@@ -159,9 +180,11 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 #### 6. Mark Chat as Read
+
 **Endpoint**: `POST /chats/{chat_id}/read`
 
 **Request Body**:
+
 ```json
 {
   "user_id": "user1"
@@ -169,6 +192,7 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ```
 
 **Response**:
+
 ```json
 {
   "chat_id": "<chat_id>",
@@ -182,12 +206,14 @@ Welcome to the Chat Backend Project! This project provides a FastAPI-based backe
 ### WebSocket Endpoint
 
 #### Connect to a Chat
+
 **Endpoint**: `ws://<host>:8000/ws/{chat_id}`
 
 - Replace `<host>` with your server (e.g., `localhost` for local testing).
 - Replace `{chat_id}` with the desired chat ID.
 
 **Example JavaScript WebSocket Client**:
+
 ```javascript
 const chatId = "<chat_id>";
 const socket = new WebSocket(`ws://localhost:8000/ws/${chatId}`);
@@ -216,6 +242,7 @@ socket.onclose = () => {
 ---
 
 ### WebSocket Events
+
 The WebSocket server sends events in the following format:
 
 ```json
@@ -228,6 +255,7 @@ The WebSocket server sends events in the following format:
 **Supported Events**:
 
 1. **`message_received`**
+
    - Sent when a new message is added to the chat.
    - Payload:
      ```json
@@ -241,6 +269,7 @@ The WebSocket server sends events in the following format:
      ```
 
 2. **`presence_updated`**
+
    - Sent when a user updates their presence.
    - Payload:
      ```json
@@ -265,8 +294,107 @@ The WebSocket server sends events in the following format:
 ---
 
 ## Notes
+
 - The bot user (`bot_user`) automatically responds with predefined messages after a delay.
 - Use the WebSocket connection for real-time updates instead of polling.
 
 Feel free to customize this backend as per your requirements!
 
+## Changes
+
+- Create some extra routes and add extra payloads.
+- To test the routes, you can use the api-calls/general.http. Is necessary the vs-code extension Rest Client (humao.rest-client), or just is Postman or any other, as your preference.
+
+#### 1. Create a new user
+
+**Endpoint**: `POST /users`
+
+**Request Body**:
+
+```json
+{
+  "name": "Jhon Doe",
+  "email": "jhon@doe.com",
+  "password": "any-password"
+}
+```
+
+**Response**:
+
+```json
+{
+  "message": "USER_CREATED",
+  "user": {
+    "user_id": "34acac32-f142-4076-8194-d5994bb382e5",
+    "name": "Jhon Doe",
+    "email": "jhon@doe.com"
+  }
+}
+```
+
+#### 2. Login user
+
+**Endpoint**: `POST /login`
+
+**Request Body**:
+
+```json
+{
+  "email": "jhon@doe.com",
+  "password": "any-password"
+}
+```
+
+**Response**:
+
+```json
+{
+  "message": "LOGIN_SUCCESSFUL",
+  "user": {
+    "user_id": "34acac32-f142-4076-8194-d5994bb382e5",
+    "name": "Jhon Doe",
+    "email": "jhon@doe.com"
+  }
+}
+```
+
+#### 3. List users
+
+**Endpoint**: `GET /users`
+
+**Response**:
+
+```json
+{
+  "users": [
+    {
+      "id": "34acac32-f142-4076-8194-d5994bb382e5",
+      "name": "Jhon Doe",
+      "email": "jhon@doe.com"
+    }
+  ]
+}
+```
+
+#### 4. Upload file
+
+**Endpoint**: `POST /upload`
+
+**Request Body**:
+
+```formData
+{
+  "file": <File>
+}
+```
+
+**Response**:
+
+```json
+{
+  "filename": "new_filename",
+  "url": "/files/{new_filename}"
+}
+```
+
+Obs: To read the file, was created an url to serve the static file uploaded in disk. The url is a GET request `${host}/files/{new_filename}`.

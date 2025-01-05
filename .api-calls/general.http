@@ -16,6 +16,10 @@ Content-Type: application/json
 GET {{baseUrl}}/users
 
 ###
+# @name findUser
+GET {{baseUrl}}/users/{{loginUser.response.body.user.user_id}}
+
+###
 # @name loginUser
 POST {{baseUrl}}/login
 Content-Type: application/json

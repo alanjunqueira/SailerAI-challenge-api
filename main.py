@@ -354,6 +354,14 @@ def list_users():
         ]
     }
 
+@app.get("/users/{user_id}")
+def get_user(user_id: str):
+    user = users.get(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    user_data = {key: value for key, value in user.items() if key != "password"}
+    return {"user": user_data}
 
 @app.post("/login")
 def login(req: LoginRequest):

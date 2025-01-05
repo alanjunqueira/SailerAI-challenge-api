@@ -376,6 +376,24 @@ Feel free to customize this backend as per your requirements!
 }
 ```
 
+#### 3. Find a user
+
+**Endpoint**: `GET /users/${userId}`
+
+**Response**:
+
+```json
+{
+  "user":
+    {
+      "id": "34acac32-f142-4076-8194-d5994bb382e5",
+      "name": "Jhon Doe",
+      "email": "jhon@doe.com"
+    }
+
+}
+```
+
 #### 4. Upload file
 
 **Endpoint**: `POST /upload`
